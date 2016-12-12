@@ -1,5 +1,5 @@
 #!/bin/bash
-# reads in a polymer configuration, writes it to a cylinder with SRD particles
+# reads in a protein configuration, writes it to a cylinder with SRD particles
 # Cmd line args: poly.lammpstrj Npolymer cylr cylh
 
 import numpy as np
@@ -8,13 +8,13 @@ import sys
 
 
 print "lammpstrj l_box"
-infile = sys.argv[1]
-npoly = 27
+infile = sys.argv[1]			    # Protein configuration file (lammpstrj format)
+npoly = 27				    # Number of protein beads
 l_box = float(sys.argv[2])
 
 # calculate number of SRD particles:
 v_box = l_box*l_box*l_box
-nsrd = int(10*v_box)		# 10 is the SRD particle density, can change later
+nsrd = int(10*v_box)		# 10 is the SRD solvent particle number density
 print "There are ", nsrd, " SRD particles."
 
 # Read Protein file
