@@ -1,6 +1,6 @@
 #!/bin/bash
 # reads in a protein configuration, writes it to a cylinder with SRD particles
-# Cmd line args: poly.lammpstrj Npolymer cylr cylh
+# Cmd line args: poly.lammpstrj boxlength
 
 import numpy as np
 import math
@@ -10,7 +10,7 @@ import sys
 print "lammpstrj l_box"
 infile = sys.argv[1]			    # Protein configuration file (lammpstrj format)
 npoly = 27				    # Number of protein beads
-l_box = float(sys.argv[2])
+l_box = float(sys.argv[2])		    # Box length
 
 # calculate number of SRD particles:
 v_box = l_box*l_box*l_box
