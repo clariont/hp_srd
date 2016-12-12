@@ -1,0 +1,85 @@
+units		lj
+atom_style		hybrid full sphere
+atom_modify first protein
+boundary		p p p
+read_data shea_srd.dat
+
+
+variable eps_h equal 4.0
+variable BL equal ${eps_h}*7.0/12.0
+variable BN equal ${eps_h}*2.0/3.0
+variable LL equal ${eps_h}/6.0
+variable LN equal ${eps_h}*0.25
+variable NN equal ${eps_h}/3.0
+variable prot_k equal ${eps_h}*50
+variable angle_k equal ${eps_h}*10
+variable torsional_1 equal ${eps_h}*6
+variable torsional_2 equal ${eps_h}*5.6
+variable mytau equal sqrt(1/${eps_h})
+variable mydamp equal 1/${mytau}
+variable mydt equal 0.025*${mytau}
+print "mydamp, mydt ${mydamp} ${mydt}"
+
+
+
+
+bond_style	    harmonic
+bond_coeff	    1 ${prot_k} 1.0
+
+angle_style		harmonic
+angle_coeff	    1 ${angle_k} 105
+
+pair_style	ljrepcut 2.5
+pair_coeff	1 1 ${eps_h} 1 1 2.5 
+pair_coeff	1 2 ${BL} 1 0 2.5
+pair_coeff	1 3 ${BN} 1 0 2.5
+pair_coeff	2 2 ${LL} 1 -1 2.5
+pair_coeff	2 3 ${LN} 1 0 2.5
+pair_coeff	3 3 ${NN} 1 0 2.5
+pair_coeff	4 * 0 1 0 2.5
+
+dihedral_style	frust
+dihedral_coeff 1 ${torsional_1} ${torsional_2} -57.2958 -180.0
+dihedral_coeff 2 ${torsional_2} ${torsional_1} -57.2958 -180.0	
+dihedral_coeff 3 0 0 -57.2958 -180.0 	
+
+group			protein type 1 2 3
+group			solvent type 4
+group			moving type 1 2 3 4
+group			writer id < 4000
+
+velocity      solvent create 0.9 123
+
+
+
+####  SRD mods
+delete_atoms	overlap 0.5 solvent protein
+
+neighbor		 0.3 bin
+neigh_modify	delay 0 every 1 check yes
+
+#comm_modify	mode multi group protein vel yes	    # lmp 2016
+communicate	multi group protein vel yes		    # lmp 2014
+neigh_modify	include protein
+####  End SRD mods
+
+
+
+log mylog.lammps
+restart 10000 flow1.dat flow2.dat
+
+compute 1 protein gyration
+
+dump 1 writer custom 5000 flow.lammpstrj id type x y z vz
+dump_modify 1 sort id
+dump 2 protein atom 5000 protein.lammpstrj
+dump_modify 2 sort id
+
+fix 5 protein nve
+fix 10 solvent srd 50 protein 1.0 1.0 123 overlap no collision noslip inside error shift yes 7 tstat yes exact no bounce 10 radius 0.88
+
+thermo 1000
+thermo_style custom step temp pe etotal press vol c_1
+timestep 0.002
+run 200000
+
